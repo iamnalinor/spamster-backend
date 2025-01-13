@@ -1,0 +1,32 @@
+stages:
+  - test
+  - deploy
+
+variables:
+  SMTP_CONFIG_EMAIL: ${SMTP_CONFIG_EMAIL}
+  SMTP_CONFIG_PASSWORD: ${SMTP_CONFIG_PASSWORD}
+  SMTP_CONFIG_HOST: ${SMTP_CONFIG_HOST}
+  SMTP_CONFIG_PORT: ${SMTP_CONFIG_PORT}
+
+test:
+  tags:
+    - self-hosted
+  stage: test
+  script:
+    - docker compose -f docker-compose.yml -f docker-compose.test.yml -p test-api down || true
+    - docker compose -f docker-compose.yml -f docker-compose.test.yml -p test-api up --build --exit-code-from api
+
+deploy:
+  dependencies:
+    - test
+  stage: deploy
+  only:
+    - main
+  tags:
+    - self-hosted
+  script:
+    - cd /home/gitlab-runner/backend
+    - git pull
+    - docker compose -f docker-compose.yml -f docker-compose.prod.yml -p backend up -d --build
+    - sleep 5
+    - docker logs -n 30 -t backend-api-1

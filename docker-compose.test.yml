@@ -1,0 +1,7 @@
+services:
+  api:
+    command:
+      - "/app/etc/entrypoint_test.sh"
+    restart: no
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
